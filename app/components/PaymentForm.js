@@ -213,6 +213,7 @@ const PaymentForm = () => {
           </div>
         </div>
       )}
+      <p className='py-4'>@Rotich_2025 - Software Dev</p>
     </div>
   )
 }
