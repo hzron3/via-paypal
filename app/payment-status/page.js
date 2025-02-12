@@ -5,12 +5,27 @@ const PaymentStatus = () => {
   const [status, setStatus] = useState('Checking...')
   const [error, setError] = useState(null)
   const [transactionDetails, setTransactionDetails] = useState(null)
+  const [orderTrackingId, setOrderTrackingId] = useState(null)
+  const [token, setToken] = useState(null)
 
-  const orderTrackingId =
-    new URLSearchParams(window.location.search).get('OrderTrackingId') ||
-    localStorage.getItem('OrderTrackingId')
-  const token = localStorage.getItem('pesapalToken')
   useEffect(() => {
+    // Only execute this code in the browser
+    if (typeof window !== 'undefined') {
+      const trackingId =
+        new URLSearchParams(window.location.search).get('OrderTrackingId') ||
+        localStorage.getItem('OrderTrackingId')
+      const pesapalToken = localStorage.getItem('pesapalToken')
+
+      setOrderTrackingId(trackingId)
+      setToken(pesapalToken)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!orderTrackingId || !token) {
+      return
+    }
+
     const checkTransactionStatus = async () => {
       try {
         console.log('Order Tracking ID:', orderTrackingId)
@@ -21,7 +36,6 @@ const PaymentStatus = () => {
           return
         }
 
-        // Call your backend API instead of Pesapal directly
         const response = await fetch(
           `/api/pesapal/getTransactionStatus?orderTrackingId=${orderTrackingId}`,
           {
@@ -41,7 +55,6 @@ const PaymentStatus = () => {
         setTransactionDetails(data)
         console.log(data)
 
-        // Set the status based on the status_code
         switch (data.status_code) {
           case 1:
             setStatus('COMPLETED')
@@ -65,16 +78,16 @@ const PaymentStatus = () => {
     }
 
     checkTransactionStatus()
-  }, [])
+  }, [orderTrackingId, token])
 
   const downloadReceipt = () => {
-    // Implement receipt generation here (you can create a downloadable PDF or CSV file)
     console.log('Downloading receipt...')
   }
 
   const retryPayment = () => {
-    // Redirect to the payment form or allow the user to retry the transaction
-    window.location.href = '/' // Update this with the actual URL to retry payment
+    if (typeof window !== 'undefined') {
+      window.location.href = '/' // Update this with the actual URL to retry payment
+    }
   }
 
   let content
